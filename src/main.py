@@ -1,62 +1,91 @@
 import os
+import time
+from datetime import datetime
 
-# 定义记事本类
-class Notepad:
-    def __init__(self):
-        self.notes = []
+# 全局变量
+notes = []
+PASSWORD = "123456"
 
-    # 添加记事
-    def add_note(self, note):
-        self.notes.append(note)
+# 密码验证功能
+def verify_password():
+    print("=== 欢迎使用记事本程序 ===")
+    input_password = input("请输入密码以继续：")
+    if input_password != PASSWORD:
+        print("密码错误，程序即将退出。")
+        exit()
 
-    # 查看记事
-    def view_notes(self):
-        if self.notes:
-            for index, note in enumerate(self.notes, start=1):
-                print(f"{index}. {note}")
+# 添加记事
+def add_note():
+    content = input("请输入记事内容：")
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    notes.append({"content": content, "timestamp": timestamp})
+    print("记事添加成功！")
+
+# 查看记事
+def view_notes():
+    if not notes:
+        print("暂无任何记事！")
+        return
+    print("\n=== 已保存的记事 ===")
+    for idx, note in enumerate(notes, start=1):
+        print(f"{idx}. {note['content']} (时间: {note['timestamp']})")
+
+# 删除记事
+def delete_note():
+    view_notes()
+    if not notes:
+        return
+    try:
+        idx = int(input("请输入要删除的记事编号：")) - 1
+        if 0 <= idx < len(notes):
+            deleted = notes.pop(idx)
+            print(f"记事删除成功：{deleted['content']}")
         else:
-            print("没有记事！")
+            print("输入编号无效！")
+    except ValueError:
+        print("请输入有效的数字！")
 
-    # 删除记事
-    def delete_note(self, note_id):
-        if 0 < note_id <= len(self.notes):
-            deleted_note = self.notes.pop(note_id - 1)
-            print(f"记事 '{deleted_note}' 删除成功！")
-        else:
-            print("无效的记事编号！")
+# 搜索记事
+def search_note():
+    keyword = input("请输入搜索关键词：")
+    results = [note for note in notes if keyword in note['content']]
+    if results:
+        print("\n=== 搜索结果 ===")
+        for idx, note in enumerate(results, start=1):
+            print(f"{idx}. {note['content']} (时间: {note['timestamp']})")
+    else:
+        print("未找到匹配的记事！")
 
-    # 搜索记事
-    def search_notes(self, keyword):
-        results = [note for note in self.notes if keyword in note]
-        if results:
-            print("=== 搜索结果 ===")
-            for index, result in enumerate(results, start=1):
-                print(f"{index}. {result}")
-        else:
-            print(f"没有找到包含关键词 '{keyword}' 的记事！")
-
-    # 修改记事
-    def modify_note(self, note_id, new_content):
-        if 0 < note_id <= len(self.notes):
-            self.notes[note_id - 1] = new_content
+# 修改记事
+def edit_note():
+    view_notes()
+    if not notes:
+        return
+    try:
+        idx = int(input("请输入要修改的记事编号：")) - 1
+        if 0 <= idx < len(notes):
+            new_content = input("请输入新的记事内容：")
+            notes[idx]['content'] = new_content
+            notes[idx]['timestamp'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             print("记事修改成功！")
         else:
-            print("无效的记事编号！")
+            print("输入编号无效！")
+    except ValueError:
+        print("请输入有效的数字！")
 
-    # 导出记事到文件
-    def export_notes(self):
-        if self.notes:
-            with open("notepad_export.txt", "w", encoding="utf-8") as f:
-                for index, note in enumerate(self.notes, start=1):
-                    f.write(f"{index}. {note}\n")
-            print("记事已成功导出到 notepad_export.txt！")
-        else:
-            print("没有可导出的记事！")
+# 导出记事
+def export_notes():
+    if not notes:
+        print("暂无任何记事可导出！")
+        return
+    with open("notepad_export.txt", "w", encoding="utf-8") as f:
+        for note in notes:
+            f.write(f"{note['content']} (时间: {note['timestamp']})\n")
+    print("记事已成功导出至 notepad_export.txt")
 
-# 主程序
+# 主程序循环
 def main():
-    notepad = Notepad()
-
+    verify_password()
     while True:
         print("\n=== 记事本功能菜单 ===")
         print("1. 添加记事")
@@ -70,40 +99,22 @@ def main():
         choice = input("请选择功能 (1-7): ")
 
         if choice == "1":
-            note = input("请输入记事内容：")
-            notepad.add_note(note)
-            print("记事添加成功！")
+            add_note()
         elif choice == "2":
-            print("\n=== 已保存的记事 ===")
-            notepad.view_notes()
+            view_notes()
         elif choice == "3":
-            notepad.view_notes()
-            try:
-                note_id = int(input("请输入要删除的记事编号："))
-                notepad.delete_note(note_id)
-            except ValueError:
-                print("请输入有效的数字！")
+            delete_note()
         elif choice == "4":
-            keyword = input("请输入要搜索的关键词：")
-            notepad.search_notes(keyword)
+            search_note()
         elif choice == "5":
-            notepad.view_notes()
-            try:
-                note_id = int(input("请输入要修改的记事编号："))
-                new_content = input("请输入新的记事内容：")
-                if new_content:
-                    notepad.modify_note(note_id, new_content)
-                else:
-                    print("输入不能为空！")
-            except ValueError:
-                print("请输入有效的数字！")
+            edit_note()
         elif choice == "6":
-            notepad.export_notes()
+            export_notes()
         elif choice == "7":
             print("程序已退出，再见！")
             break
         else:
-            print("无效的选择，请输入1到7之间的数字！")
+            print("无效的选择，请重新输入！")
 
 if __name__ == "__main__":
     main()
